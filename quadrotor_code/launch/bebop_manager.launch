@@ -1,7 +1,0 @@
-<launch>
-
-  <node name="bebop_manager" pkg="quadrotor_code" type="bebop_manager" output="screen">
-  <param name='robotnum' value='5'/>
-  </node>
-  
-</launch>
