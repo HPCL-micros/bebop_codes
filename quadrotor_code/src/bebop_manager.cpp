@@ -2,6 +2,7 @@
 
 #include "ros/ros.h"
 #include "tf/tf.h"
+#include <tf/transform_broadcaster.h>
 #include "nav_msgs/Odometry.h"
 #include "bebop_msgs/Ardrone3PilotingStateAttitudeChanged.h"
 #include "bebop_msgs/Ardrone3PilotingStateSpeedChanged.h"
@@ -47,6 +48,7 @@ class OdomHandle
     ros::Publisher neighbor_pub;
     ros::Publisher stop_pub;
     ros::Publisher fix_odom_pub;
+    double odomx,odomy,odomz,odomtheta;
     double _px,_py,_vx,_vy;
     double _pz,_vz,_theta;
     int _r_id; 
@@ -108,11 +110,12 @@ class OdomHandle
         _r_id = r_id;
         vx=r_id/line_uav_num;  //计算摆放位置的虚拟坐标
         vy=r_id%line_uav_num;
-        /*
-        if(r_id ==2)
-        {
-            vx = 1;vy = 0;
-        }*/
+        
+        odomx = vx * delta_dis;
+        odomy = -vy * delta_dis;
+        odomz = 0;
+        
+        odomtheta=0;
         count = 0;
       
     }
@@ -121,6 +124,11 @@ class OdomHandle
     {
         double msgtheta = msg->yaw;
         _theta = -msgtheta;
+        if(count == 0)
+        {
+            odomtheta = _theta;
+        }
+        count++;
         /*
         if (msgtheta >= 0)
         {
@@ -153,7 +161,7 @@ class OdomHandle
         _vy = -msg->linear.y;//NEU -> NWU
         velrcv = true;
     }
-    
+    /*
     void fixcb(const sensor_msgs::NavSatFix::ConstPtr & msg)
     {
         geographic_msgs::GeoPoint geo_pt;
@@ -193,7 +201,7 @@ class OdomHandle
         fixrcv = true;
         _py = - _py;//NEU -> NWU
     }
-    
+    */
     void odomcb(const nav_msgs::Odometry::ConstPtr & msg)
     {
         /*if(odom_first)
@@ -211,7 +219,6 @@ class OdomHandle
         yy=msg->pose.pose.orientation.y;
         zz=msg->pose.pose.orientation.z;
         ww=msg->pose.pose.orientation.w;
-        
         double tmp_vx=msg->twist.twist.linear.x;
         double tmp_vy=msg->twist.twist.linear.y;
        //vel_out<<msg->header.stamp-odom_start_time.data<<" "<<tmp_vx<<" "<<tmp_vy<<" "<<sqrt(tmp_vx*tmp_vx+tmp_vy*tmp_vy)<<endl;
@@ -241,6 +248,7 @@ int main(int argc, char** argv)
    //ofstream fout("/home/liminglong/czx/traject.txt");
    //ofstream fout2("/home/liminglong/czx/velocity.txt");
    ros::Publisher posepub = n.advertise<geometry_msgs::PoseArray>("/swarm_pose",1000);
+   tf::TransformBroadcaster br;
    for(int i=0;i<robotnum;i++)
    {
       OdomHandle *p=new OdomHandle(i);
@@ -252,6 +260,7 @@ int main(int argc, char** argv)
    int count = 1;
    while(ros::ok())
    {
+      //publish pose array
       geometry_msgs::PoseArray sendpose;
        sendpose.header.frame_id="odom";
       for(int i=0;i<robotnum;i++)
@@ -277,18 +286,19 @@ int main(int argc, char** argv)
       {
            for(int j=i+1;j<robotnum;j++)
            {
-                if(dist(i,j)>0&&dist(i,j)<R)
+                if(dist(i,j)>0&&dist(i,j)<R)//calculate adjacent list
                 {
                     adj_list[i].push_back(j);
                     adj_list[j].push_back(i);
                 }
-                if(dist(i,j) < stopdist)
+                if(dist(i,j) < stopdist)//publish stop msg (too close)
                 {
                     std_msgs::Int32 stopmsg;
                     for(int k=0;k<robotnum;k++)
                         odom_list[k]->stop_pub.publish(stopmsg);
                 }
            }
+           //publish status msg 
            quadrotor_code::Status sendmsg;
            sendmsg.px = odom_list[i]-> _px;
            sendmsg.py = odom_list[i]-> _py;
@@ -297,7 +307,7 @@ int main(int argc, char** argv)
            sendmsg.theta =  odom_list[i]-> _theta;
            odom_list[i]->pub.publish(sendmsg);
       }
-      
+      //publish odom 
       for(int i=0;i<robotnum;i++)
       {
           nav_msgs::Odometry odommsg;
@@ -306,12 +316,6 @@ int main(int argc, char** argv)
           odommsg.pose.pose.position.x=odom_list[i]-> _px;
           odommsg.pose.pose.position.y=odom_list[i]-> _py;
           odommsg.pose.pose.position.z=odom_list[i]-> _pz;
-          
-          //tf::Quaternion q(odom_list[i]->_theta,0,0);
-          //odommsg.pose.pose.orientation.x=q.x();
-          //odommsg.pose.pose.orientation.y=q.y();
-          //odommsg.pose.pose.orientation.z=q.z();
-          //odommsg.pose.pose.orientation.w=q.w();
          
           odommsg.pose.pose.orientation.x=odom_list[i]->xx;
           odommsg.pose.pose.orientation.y=odom_list[i]->yy;
@@ -320,7 +324,7 @@ int main(int argc, char** argv)
           
           odom_list[i]->fix_odom_pub.publish(odommsg);
       }
-      
+      //publish neighbor
       for(int i=0;i<robotnum;i++)
       {
            quadrotor_code::Neighbor sendmsg;
@@ -328,22 +332,19 @@ int main(int argc, char** argv)
            odom_list[i]->neighbor_pub.publish(sendmsg);
            adj_list[i]=vector<int>();
       }
-      /*if(count%10==0)
+      for(int i=0;i<robotnum;i++)
       {
-          fout2<<count/10*0.5;
-          for(int i=0;i<robotnum;i++)
-          {
-              double vx=odom_list[i]->_vx;
-              double vy=odom_list[i]->_vy;
-              double px=odom_list[i]->_px;
-              double py=odom_list[i]->_py;
-              fout2<<' '<<sqrt(vx*vx+vy*vy);
-              fout<<px<<' '<<py<<' ';
-          }
-          fout2<<endl;
-          fout<<endl;
+          tf::Transform transform;
+          transform.setOrigin( tf::Vector3(odom_list[i]->odomx,odom_list[i]->odomy , odom_list[i]->odomz) );
+          tf::Quaternion q;
+          q.setRPY(0, 0, odom_list[i]->odomtheta);
+          transform.setRotation(q);
+          
+          stringstream ss;
+          ss<<"/uav"<<i<<"/odom";
+          br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", ss.str()));
       }
-      */
+      //publish tf map->odom
       count++;
       loop_rate.sleep();
    }
