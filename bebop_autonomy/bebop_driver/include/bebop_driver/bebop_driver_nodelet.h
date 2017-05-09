@@ -109,7 +109,7 @@ private:
 
   geometry_msgs::Twist camera_twist_;
   geometry_msgs::Twist prev_camera_twist_;
-
+  std::string my_tf_prefix;
   ros::Subscriber cmd_vel_sub_;
   ros::Subscriber camera_move_sub_;
   ros::Subscriber takeoff_sub_;

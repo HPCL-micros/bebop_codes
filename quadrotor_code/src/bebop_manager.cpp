@@ -311,8 +311,10 @@ int main(int argc, char** argv)
       for(int i=0;i<robotnum;i++)
       {
           nav_msgs::Odometry odommsg;
-          odommsg.header.frame_id="odom";
-          odommsg.child_frame_id="base_link";
+          stringstream ss;
+          ss<<"uav"<<i<<"_odom";
+          odommsg.header.frame_id="map";
+          odommsg.child_frame_id=ss.str();
           odommsg.pose.pose.position.x=odom_list[i]-> _px;
           odommsg.pose.pose.position.y=odom_list[i]-> _py;
           odommsg.pose.pose.position.z=odom_list[i]-> _pz;
@@ -341,8 +343,9 @@ int main(int argc, char** argv)
           transform.setRotation(q);
           
           stringstream ss;
-          ss<<"/uav"<<i<<"/odom";
+          ss<<"uav"<<i<<"_odom";
           br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", ss.str()));
+          //cout<<"sent"<<endl;
       }
       //publish tf map->odom
       count++;

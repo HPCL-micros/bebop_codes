@@ -24,5 +24,4 @@ states:
 
 reset_settings: true
 publish_odom_tf: true
-odom_frame_id: "odom"
 cmd_vel_timeout: 0.2
