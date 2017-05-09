@@ -7,6 +7,7 @@
 #include <gps_common/conversions.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Int32.h>
+#include <cmath>
 
 using namespace std;
 
@@ -25,6 +26,7 @@ double x_limit, y_limit, z_limit;
 double x_vel_limit, y_vel_limit, z_vel_limit;
 bool need_hover=false;
 boost::mutex mut;
+bool stop_enabled=false;
 
 static ros::Publisher cmd_vel_pub;
 
@@ -121,6 +123,13 @@ void fixCallBack(const sensor_msgs::NavSatFixConstPtr& fix)
     }
 }
 
+void odomCallBack(const nav_msgs::OdometryConstPtr& odom)
+{
+    current.x=odom->pose.pose.position.x;
+    current.y=odom->pose.pose.position.y;
+    current.z=odom->pose.pose.position.z;
+}
+
 void cmdCallBack(const geometry_msgs::TwistConstPtr& cmd)
 {
     if(need_hover)  //需要悬停，速度置0
@@ -135,9 +144,9 @@ void cmdCallBack(const geometry_msgs::TwistConstPtr& cmd)
     else
     {
         geometry_msgs::Twist t;
-        t.linear.x = cmd->linear.x<x_vel_limit?cmd->linear.x:x_vel_limit;  //限制最大速度
-        t.linear.y = cmd->linear.y<y_vel_limit?cmd->linear.y:y_vel_limit;
-        t.linear.z = cmd->linear.z<z_vel_limit?cmd->linear.z:z_vel_limit;
+        t.linear.x = abs(cmd->linear.x) < x_vel_limit?cmd->linear.x:x_vel_limit*(cmd->linear.x / abs(cmd->linear.x) );  //限制最大速度
+        t.linear.y = abs(cmd->linear.y) < y_vel_limit?cmd->linear.y:y_vel_limit*(cmd->linear.y / abs(cmd->linear.y) );
+        t.linear.z = abs(cmd->linear.z) < z_vel_limit?cmd->linear.z:z_vel_limit*(cmd->linear.z / abs(cmd->linear.z) );
 
         cmd_vel_pub.publish(t);
     }
@@ -147,6 +156,11 @@ void checkStatus()
 {
     while(ros::ok())
     {
+        if(stop_enabled){
+            cout<<"topic stop activated"<<endl;
+            wait(0.5);
+            continue;
+        }
         if (current.x - start.x >= x_limit || current.x - start.x <= -x_limit) {
             //std::cout << x_limit<<"," << current.x<<","<< start.x<<","<<current.x-start.x << std::endl;
             cout<<"x limit is over!!!"<<endl;
@@ -169,6 +183,7 @@ void checkStatus()
             mut.unlock();
             return;
         }
+        
         //mut.lock();
         //need_hover = false;
         //mut.unlock();
@@ -180,6 +195,7 @@ void stopCallBack(const std_msgs::Int32ConstPtr& msg)
 {
     mut.lock();
     need_hover = true;
+    stop_enabled = true;
     mut.unlock();
 }
 
@@ -214,7 +230,8 @@ int main (int argc, char **argv) {
 
     //odom_pub = node.advertise<nav_msgs::Odometry>("odom", 10);
 
-    ros::Subscriber fix_sub = node.subscribe("fix", 10, fixCallBack);
+    //ros::Subscriber fix_sub = node.subscribe("fix", 10, fixCallBack);
+    ros::Subscriber odom_sub = node.subscribe("odom", 10, odomCallBack);
     ros::Subscriber stop_sub = node.subscribe("stop", 10, stopCallBack);
     ros::Subscriber cmd_vel_sub = node.subscribe("barrier_input_cmd_vel", 1000, cmdCallBack);
     cmd_vel_pub = node.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
