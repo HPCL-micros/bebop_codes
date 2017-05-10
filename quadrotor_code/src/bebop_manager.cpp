@@ -212,7 +212,7 @@ class OdomHandle
         
         _px= msg->pose.pose.position.x+ vx * delta_dis;
         _py= msg->pose.pose.position.y- vy * delta_dis;
-        cout<<vx<<' '<<vy<<' '<<_px<<' '<<_py<<endl;
+        //cout<<vx<<' '<<vy<<' '<<_px<<' '<<_py<<endl;
         
         
         xx=msg->pose.pose.orientation.x;
@@ -312,9 +312,9 @@ int main(int argc, char** argv)
       {
           nav_msgs::Odometry odommsg;
           stringstream ss;
-          ss<<"uav"<<i<<"_odom";
+          ss<<"uav"<<i<<"/odom";
           odommsg.header.frame_id="map";
-          odommsg.child_frame_id=ss.str();
+          odommsg.child_frame_id=ss.str().c_str();
           odommsg.pose.pose.position.x=odom_list[i]-> _px;
           odommsg.pose.pose.position.y=odom_list[i]-> _py;
           odommsg.pose.pose.position.z=odom_list[i]-> _pz;
@@ -343,8 +343,8 @@ int main(int argc, char** argv)
           transform.setRotation(q);
           
           stringstream ss;
-          ss<<"uav"<<i<<"_odom";
-          br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", ss.str()));
+          ss<<"uav"<<i<<"/odom";
+          br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", ss.str().c_str()));
           //cout<<"sent"<<endl;
       }
       //publish tf map->odom

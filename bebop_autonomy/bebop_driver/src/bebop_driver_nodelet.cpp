@@ -506,7 +506,8 @@ void BebopDriverNodelet::AuxThread()
   ros::Time last_odom_time(ros::Time::now());
   geometry_msgs::TransformStamped odom_to_base_tf;
   odom_to_base_tf.header.frame_id = param_odom_frame_id_;
-  odom_to_base_tf.child_frame_id = my_tf_prefix+"_base_link";
+  std::string tmp_tf_prefix1=my_tf_prefix+"/base_link";
+  odom_to_base_tf.child_frame_id = tmp_tf_prefix1.c_str();;
   tf2_ros::TransformBroadcaster tf_broad;
   tf2::Vector3 odom_to_base_trans_v3(0.0, 0.0, 0.0);
   tf2::Quaternion odom_to_base_rot_q;
@@ -630,7 +631,8 @@ void BebopDriverNodelet::AuxThread()
         nav_msgs::OdometryPtr odom_msg_ptr(new nav_msgs::Odometry());
         odom_msg_ptr->header.stamp = stamp;
         odom_msg_ptr->header.frame_id = param_odom_frame_id_;
-        odom_msg_ptr->child_frame_id = my_tf_prefix+"_base_link";
+        std::string tmp_tf_prefix2=my_tf_prefix+"/base_link";
+        odom_msg_ptr->child_frame_id = tmp_tf_prefix2.c_str();
         odom_msg_ptr->twist.twist.linear.x = beb_vx_m;
         odom_msg_ptr->twist.twist.linear.y = beb_vy_m;
         odom_msg_ptr->twist.twist.linear.z = beb_vz_m;
