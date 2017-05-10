@@ -5,6 +5,8 @@
 #include <tf/transform_broadcaster.h>
 #include "nav_msgs/Odometry.h"
 #include "decide_softbus_msgs/NavigationPoint.h"
+#include "geometry_msgs/PointStamped.h"
+#include <decide_softbus_msgs/SetControlling.h>
 #include "bebop_msgs/Ardrone3PilotingStateAttitudeChanged.h"
 #include "bebop_msgs/Ardrone3PilotingStateSpeedChanged.h"
 #include "quadrotor_code/Status.h"
@@ -260,6 +262,22 @@ void rvizGoalCb(const geometry_msgs::PoseStamped::ConstPtr & msg)
     rviz_goal_pub_.publish(tmp_goal);
 }
 
+ros::ServiceClient rviz_start_action_client_;
+
+void rvizStartActionCb(const geometry_msgs::PointStamped::ConstPtr & msg)
+{
+    decide_softbus_msgs::SetControlling srv;
+    srv.request.CONTROLLING = 1;
+    if (rviz_start_action_client_.call(srv))
+    {
+        ROS_INFO("start action...");
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service: /uav0/move_base/set_controlling");
+    }
+}
+
 int main(int argc, char** argv)
 {
    ros::init(argc,argv,"sim_manager");
@@ -271,6 +289,10 @@ int main(int argc, char** argv)
    ros::Publisher posepub = n.advertise<geometry_msgs::PoseArray>("/swarm_pose",1000);
    rviz_goal_pub_ = n.advertise<decide_softbus_msgs::NavigationPoint>("/uav0/move_base_simple/goal", 0 );
    ros::Subscriber rviz_sub = n.subscribe<geometry_msgs::PoseStamped>("/rviz_simple/goal", 1000, rvizGoalCb);
+   
+   rviz_start_action_client_= n.serviceClient<decide_softbus_msgs::SetControlling>("/uav0/move_base/set_controlling");
+   ros::Subscriber rviz_start_action_sub = n.subscribe<geometry_msgs::PointStamped>("/rviz_simple/start_action", 1000, rvizStartActionCb);
+   
    tf::TransformBroadcaster br;
    for(int i=0;i<robotnum;i++)
    {

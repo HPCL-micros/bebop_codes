@@ -146,9 +146,10 @@ Visualization Manager:
       Topic: /initialpose
     - Class: rviz/SetGoal
       Topic: /rviz_simple/goal
+      Topic: /rviz_simple/start_action
     - Class: rviz/PublishPoint
       Single click: true
-      Topic: /clicked_point
+      Topic: /rviz_simple/start_action
   Value: true
   Views:
     Current:
