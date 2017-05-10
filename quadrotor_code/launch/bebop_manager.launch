@@ -13,5 +13,5 @@
     <param name="frame_id" value="/map"/>
   </node>
   
-  <node name="rviz" pkg="rviz" type="rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find quadrotor_code)/rviz/bebop_swarm_navigation.rviz"/>
 </launch>

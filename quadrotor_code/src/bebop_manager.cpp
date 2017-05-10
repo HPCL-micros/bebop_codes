@@ -4,6 +4,7 @@
 #include "tf/tf.h"
 #include <tf/transform_broadcaster.h>
 #include "nav_msgs/Odometry.h"
+#include "decide_softbus_msgs/NavigationPoint.h"
 #include "bebop_msgs/Ardrone3PilotingStateAttitudeChanged.h"
 #include "bebop_msgs/Ardrone3PilotingStateSpeedChanged.h"
 #include "quadrotor_code/Status.h"
@@ -238,9 +239,29 @@ double dist(int i,int j)
     
 }
 
+ros::Publisher rviz_goal_pub_;
+
+void rvizGoalCb(const geometry_msgs::PoseStamped::ConstPtr & msg)
+{
+    decide_softbus_msgs::NavigationPoint tmp_goal;
+    tmp_goal.header.seq=msg->header.seq;
+    tmp_goal.header.stamp=msg->header.stamp;
+    tmp_goal.header.frame_id=msg->header.frame_id;
+            
+    tmp_goal.pose.position.x=msg->pose.position.x;
+    tmp_goal.pose.position.y=msg->pose.position.y;
+    tmp_goal.pose.position.z=msg->pose.position.z;
+            
+    tmp_goal.pose.orientation.x=msg->pose.orientation.x;
+    tmp_goal.pose.orientation.y=msg->pose.orientation.y;
+    tmp_goal.pose.orientation.z=msg->pose.orientation.z;
+    tmp_goal.pose.orientation.w=msg->pose.orientation.w;
+    
+    rviz_goal_pub_.publish(tmp_goal);
+}
+
 int main(int argc, char** argv)
 {
-
    ros::init(argc,argv,"sim_manager");
    ros::NodeHandle n;
    srand(time(0));
@@ -248,6 +269,8 @@ int main(int argc, char** argv)
    //ofstream fout("/home/liminglong/czx/traject.txt");
    //ofstream fout2("/home/liminglong/czx/velocity.txt");
    ros::Publisher posepub = n.advertise<geometry_msgs::PoseArray>("/swarm_pose",1000);
+   rviz_goal_pub_ = n.advertise<decide_softbus_msgs::NavigationPoint>("/uav0/move_base_simple/goal", 0 );
+   ros::Subscriber rviz_sub = n.subscribe<geometry_msgs::PoseStamped>("/rviz_simple/goal", 1000, rvizGoalCb);
    tf::TransformBroadcaster br;
    for(int i=0;i<robotnum;i++)
    {
