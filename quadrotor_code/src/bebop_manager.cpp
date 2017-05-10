@@ -357,6 +357,7 @@ int main(int argc, char** argv)
            odom_list[i]->neighbor_pub.publish(sendmsg);
            adj_list[i]=vector<int>();
       }
+      //publish tf map->odom
       for(int i=0;i<robotnum;i++)
       {
           tf::Transform transform;
@@ -370,7 +371,6 @@ int main(int argc, char** argv)
           br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", ss.str().c_str()));
           //cout<<"sent"<<endl;
       }
-      //publish tf map->odom
       count++;
       loop_rate.sleep();
    }

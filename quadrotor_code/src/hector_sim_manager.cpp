@@ -2,6 +2,7 @@
 
 #include "ros/ros.h"
 #include "tf/tf.h"
+#include <tf/transform_broadcaster.h>
 #include "nav_msgs/Odometry.h"
 #include "bebop_msgs/Ardrone3PilotingStateAttitudeChanged.h"
 #include "bebop_msgs/Ardrone3PilotingStateSpeedChanged.h"
@@ -186,6 +187,8 @@ int main(int argc, char** argv)
    //ofstream fout2("/home/liminglong/czx/velocity.txt");
    
    ros::Publisher posepub = n.advertise<geometry_msgs::PoseArray>("/swarm_pose",1000);
+   
+   tf::TransformBroadcaster br;
    for(int i=0;i<robotnum;i++)
    {
       OdomHandle *p=new OdomHandle(i);
@@ -247,22 +250,47 @@ int main(int argc, char** argv)
            odom_list[i]->neighbor_pub.publish(sendmsg);
            adj_list[i]=vector<int>();
       }
-      /*if(count%10==0)
+      
+      //publish tf map->uavx/odom (aligned)
+      for(int i=0;i<robotnum;i++)
       {
-          fout2<<count/10*0.5;
-          for(int i=0;i<robotnum;i++)
-          {
-              double vx=odom_list[i]->_vx;
-              double vy=odom_list[i]->_vy;
-              double px=odom_list[i]->_px;
-              double py=odom_list[i]->_py;
-              fout2<<' '<<sqrt(vx*vx+vy*vy);
-              fout<<px<<' '<<py<<' ';
-          }
-          fout2<<endl;
-          fout<<endl;
+          tf::Transform transform;
+          transform.setOrigin( tf::Vector3(0.0,0.0 , 0.0) );
+          tf::Quaternion q;
+          q.setRPY(0, 0, 0);
+          transform.setRotation(q);
+           stringstream ss;
+          ss<<"uav"<<i<<"/odom";
+          br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", ss.str().c_str()));
       }
-      */
+      
+      //publish tf map->world (alogned)
+      {
+          tf::Transform transform;
+          transform.setOrigin( tf::Vector3(0.0,0.0 , 0.0) );
+          tf::Quaternion q;
+          q.setRPY(0, 0, 0);
+          transform.setRotation(q);
+           
+          br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "world"));
+      }
+      /*
+      //publish uavx/odom->uavx/base_link
+      for(int i=0;i<robotnum;i++)
+      {
+          tf::Transform transform;
+          transform.setOrigin( tf::Vector3(odom_list[i]->_px,odom_list[i]->_py , odom_list[i]->_pz) );
+          tf::Quaternion q;
+          q.setRPY(0, 0, odom_list[i]->_theta);
+          transform.setRotation(q);
+          
+          stringstream ss;
+          ss<<"uav"<<i<<"/odom";
+           stringstream ss1;
+          ss1<<"uav"<<i<<"/base_link";
+          br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), ss.str().c_str(), ss1.str().c_str()));
+          //cout<<"sent"<<endl;
+      }*/
       count++;
       loop_rate.sleep();
    }
