@@ -114,6 +114,12 @@ class OdomHandle
         vx=r_id/line_uav_num;  //计算摆放位置的虚拟坐标
         vy=r_id%line_uav_num;
         
+        if(r_id ==2)
+        {
+            vx = 2;
+            vy = -3;
+        }
+        
         odomx = vx * delta_dis;
         odomy = -vy * delta_dis;
         odomz = 0;

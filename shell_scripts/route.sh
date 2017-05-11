@@ -1,0 +1,10 @@
+ifconfig wlo1 192.168.42.50 netmask 255.255.255.0
+ifconfig wlx3c46d8d51cdd 192.168.42.51 netmask 255.255.255.0
+ifconfig wlx3c46d8be8411 192.168.42.52 netmask 255.255.255.0
+#ifconfig wlx3c46d8d434f3 192.168.42.53 netmask 255.255.255.0
+#ifconfig wlx3c46d8d46149 192.168.42.54 netmask 255.255.255.0
+route add 192.168.42.1/32 gw 192.168.42.50
+route add 192.168.42.2/32 gw 192.168.42.51
+route add 192.168.42.3/32 gw 192.168.42.52
+#route add 192.168.42.4/32 gw 192.168.42.53
+#route add 192.168.42.5/32 gw 192.168.42.54
