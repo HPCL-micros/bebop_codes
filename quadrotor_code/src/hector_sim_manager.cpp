@@ -52,6 +52,7 @@ class OdomHandle
     double delta_x,delta_y;//误差向量
     
     double qx,qy,qz,qw;//orientation
+    
    
     OdomHandle(int r_id)
     {
@@ -79,7 +80,7 @@ class OdomHandle
         
         stringstream ss2;
         ss2<<"/uav"<<r_id<<"/fix";
-        sub_fix = n.subscribe(ss2.str(), 1000, &OdomHandle::fixcb,this);
+       // sub_fix = n.subscribe(ss2.str(), 1000, &OdomHandle::fixcb,this);
         
         stringstream ss3;
         ss3<<"/uav"<<r_id<<"/position";
@@ -97,6 +98,8 @@ class OdomHandle
         _r_id = r_id;
         vx=r_id/3;
         vy=r_id%3;
+        
+       
        count =0;
        qx=0;qy=0;qz=0;qw=1;
     }
@@ -150,8 +153,8 @@ class OdomHandle
     {
         //cout<<this->_px<<" "<<_r_id<<" "<<_vy<<endl;
        
-        //_px=msg->pose.pose.position.x;
-        //_py=msg->pose.pose.position.y;
+        _px=msg->pose.pose.position.x;
+        _py=msg->pose.pose.position.y;
   
         _vx=msg->twist.twist.linear.x;
         _vy=msg->twist.twist.linear.y;

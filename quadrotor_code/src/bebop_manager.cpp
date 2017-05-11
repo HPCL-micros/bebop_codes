@@ -114,14 +114,8 @@ class OdomHandle
         vx=r_id/line_uav_num;  //计算摆放位置的虚拟坐标
         vy=r_id%line_uav_num;
         
-        if(r_id ==2)
-        {
-            vx = 2;
-            vy = -3;
-        }
-        
-        odomx = vx * delta_dis;
-        odomy = -vy * delta_dis;
+        odomx = 0;//vx * delta_dis;
+        odomy = 0;//-vy * delta_dis;
         odomz = 0;
         
         odomtheta=0;
@@ -219,8 +213,8 @@ class OdomHandle
             odom_first=false;
         }*/
         
-        _px= msg->pose.pose.position.x+ vx * delta_dis;
-        _py= msg->pose.pose.position.y- vy * delta_dis;
+        _px= msg->pose.pose.position.x+ odomx;
+        _py= msg->pose.pose.position.y+ odomy;
         //cout<<vx<<' '<<vy<<' '<<_px<<' '<<_py<<endl;
         
         
@@ -290,6 +284,7 @@ int main(int argc, char** argv)
    ros::NodeHandle n;
    srand(time(0));
    bool param_ok = ros::param::get ("~robotnum", robotnum);
+   
    //ofstream fout("/home/liminglong/czx/traject.txt");
    //ofstream fout2("/home/liminglong/czx/velocity.txt");
    ros::Publisher posepub = n.advertise<geometry_msgs::PoseArray>("/swarm_pose",1000);
@@ -305,6 +300,16 @@ int main(int argc, char** argv)
       OdomHandle *p=new OdomHandle(i);
       odom_list.push_back(p);
       adj_list.push_back(vector<int>());
+   }
+   
+   for(int i=0;i<robotnum;i++)
+   {
+       stringstream ss;
+       ss<<"~uav"<<i<<"_x";
+       bool param_ok = ros::param::get (ss.str(), odom_list[i]->odomx);
+       stringstream ssy;
+       ssy<<"~uav"<<i<<"_y";
+       param_ok = ros::param::get (ssy.str(), odom_list[i]->odomy);
    }
    //neighbor_list.push_back(NeighborHandle(1));
    ros::Rate loop_rate(20);
