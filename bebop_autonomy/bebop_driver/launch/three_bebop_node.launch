@@ -61,6 +61,7 @@
     <!--
     <group ns="uav0">
     <node pkg="flight_barrier" type="flight_barrier_node" name="flight_barrier_node" output="screen">
+        <param name="robot_name" type="string" value="uav0"/>
         <param name="x_limit" type="double" value="20.0"/>
         <param name="y_limit" type="double" value="20.0"/>
         <param name="z_limit" type="double" value="10.0"/>
@@ -73,6 +74,7 @@
    
     <group ns="uav1">
     <node pkg="flight_barrier" type="flight_barrier_node" name="flight_barrier_node" output="screen">
+       <param name="robot_name" type="string" value="uav1"/>
         <param name="x_limit" type="double" value="20.0"/>
         <param name="y_limit" type="double" value="20.0"/>
         <param name="z_limit" type="double" value="10.0"/>
@@ -85,6 +87,7 @@
     
     <group ns="uav2">
     <node pkg="flight_barrier" type="flight_barrier_node" name="flight_barrier_node" output="screen">
+        <param name="robot_name" type="string" value="uav2"/>
         <param name="x_limit" type="double" value="20.0"/>
         <param name="y_limit" type="double" value="20.0"/>
         <param name="z_limit" type="double" value="10.0"/>

@@ -1,3 +1,14 @@
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/shm.h>
+
 #include <ros/ros.h>
 #include <boost/thread.hpp>
 #include <message_filters/subscriber.h>
@@ -7,6 +18,7 @@
 #include <gps_common/conversions.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/String.h>
 #include <cmath>
 
 using namespace std;
@@ -28,7 +40,10 @@ bool need_hover=false;
 boost::mutex mut;
 bool stop_enabled=false;
 
+std::string robot_name;
+
 static ros::Publisher cmd_vel_pub;
+//static ros::Publisher driver_down_pub;
 
 Position start;
 Position current;
@@ -191,6 +206,59 @@ void checkStatus()
     }
 }
 
+/*void waitSocket()
+{
+    int server_sockfd = socket(AF_INET,SOCK_STREAM, 0);
+
+    struct sockaddr_in server_sockaddr;
+    server_sockaddr.sin_family = AF_INET;
+    server_sockaddr.sin_port = htons(45678);
+    server_sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if(bind(server_sockfd,(struct sockaddr *)&server_sockaddr,sizeof(server_sockaddr))==-1)
+    {
+        perror("bind");
+        exit(1);
+    }
+
+    if(listen(server_sockfd,20) == -1)
+    {
+        perror("listen");
+        exit(1);
+    }
+    
+    char buffer[64];
+    struct sockaddr_in client_addr;
+    socklen_t length = sizeof(client_addr);
+
+    int conn = accept(server_sockfd, (struct sockaddr*)&client_addr, &length);
+    if(conn<0)
+    {
+        perror("connect");
+        exit(1);
+    }
+
+    while(ros::ok())
+    {
+        memset(buffer,0,sizeof(buffer));
+        int len = recv(conn, buffer, sizeof(buffer),0);
+        //if(strcmp(buffer,"down")==0)
+        {
+            ROS_ERROR("in flight barrier, received driver down signal");
+            for(int i=0;i<5;i++)
+            {    
+                std_msgs::String msg;
+                msg.data=robot_name;
+                driver_down_pub.publish(msg);
+            }    
+        }
+        wait(0.5);
+    }
+    close(conn);
+    close(server_sockfd);
+}
+*/
+
 void stopCallBack(const std_msgs::Int32ConstPtr& msg)
 {
     mut.lock();
@@ -222,6 +290,7 @@ int main (int argc, char **argv) {
     priv_node.param<double>("x_vel_limit", x_vel_limit, 0.5);
     priv_node.param<double>("y_vel_limit", y_vel_limit, 0.5);
     priv_node.param<double>("z_vel_limit", z_vel_limit, 0.5);
+    priv_node.param<std::string>("robot_name", robot_name, "uav0");
 
     //std::cout<<x_limit<<","<<y_limit<<","<<z_limit<<std::endl;
     //std::cout<<x_vel_limit<<","<<y_vel_limit<<","<<z_vel_limit<<std::endl;
@@ -235,10 +304,14 @@ int main (int argc, char **argv) {
     ros::Subscriber stop_sub = node.subscribe("stop", 10, stopCallBack);
     ros::Subscriber cmd_vel_sub = node.subscribe("barrier_input_cmd_vel", 1000, cmdCallBack);
     cmd_vel_pub = node.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+    //driver_down_pub = node.advertise<std_msgs::String>("/uav_driver_down", 1000);
 
     boost::thread check(checkStatus);
+    //boost::thread socket_pro(waitSocket);
 
     ros::spin();
+    
     check.join();
+    //socket_pro.join();
 }
 
