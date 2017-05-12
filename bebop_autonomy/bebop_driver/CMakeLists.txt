@@ -86,6 +86,8 @@ target_link_libraries(bebop
 )
 
 add_dependencies(bebop ${PROJECT_NAME}_gencfg)
+add_dependencies(bebop ${bebop_msgs_EXPORTED_TARGETS})
+add_dependencies(bebop bebop_msgs_generate_messages_cpp)
 
 add_library(bebop_driver_nodelet src/bebop_driver_nodelet.cpp)
 target_link_libraries(bebop_driver_nodelet
@@ -99,7 +101,7 @@ target_link_libraries(bebop_driver_node
   bebop
 )
 
-add_dependencies( bebop_driver_node ${bebop_driver_EXPORTED_TARGETS})
+add_dependencies(bebop_driver_node ${bebop_driver_EXPORTED_TARGETS})
 
 #############
 ## Install ##

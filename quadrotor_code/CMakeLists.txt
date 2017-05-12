@@ -135,6 +135,8 @@ add_dependencies(hector_reset ${quadrotor_code_EXPORTED_TARGETS})
 add_dependencies(bebop_manager ${quadrotor_code_EXPORTED_TARGETS})
 add_dependencies(fly_circle ${quadrotor_code_EXPORTED_TARGETS})
 add_dependencies(hector_sim_manager ${quadrotor_code_EXPORTED_TARGETS})
+add_dependencies(bebop_manager decide_softbus_msgs_generate_messages_cpp)
+add_dependencies(hector_sim_manager decide_softbus_msgs_generate_messages_cpp)
 
 target_link_libraries( gpstest 
    ${catkin_LIBRARIES}

@@ -18,8 +18,7 @@ set(ARDRONESDK3_PATH ${ARDRONESDK3_DEVEL_PATH}/src/ARSDKBuildUtils/out/arsdk-nat
 
 # 3.11.0 patch 0
 set(ARSDK_ARCHIVE arsdk_3_11_0_p0_stripped.tgz)
-#set(ARSDK_ARCHIVE_MD5 c6e04174ffdf736378c79ef6fd921265)
-set(ARSDK_ARCHIVE_MD5 b20aad8ebd96daf48da38e1000eb8909)
+set(ARSDK_ARCHIVE_MD5 c2b89223476fcfafb64f9035241839c2)
 
 # Determine the architecure of the host in a robust way
 execute_process(COMMAND python ${PROJECT_SOURCE_DIR}/script/get_arch.py OUTPUT_VARIABLE BUILD_HOST_ARCH)
