@@ -77,17 +77,6 @@
  *             private header:
  *
  *****************************************/
- 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdio.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/shm.h>
 
 typedef struct _ARNETWORKAL_WifiNetworkObject_
 {
@@ -930,32 +919,6 @@ eARNETWORKAL_MANAGER_RETURN ARNETWORKAL_WifiNetwork_Receive(ARNETWORKAL_Manager_
 
                         /* Disconnect callback */
                         receiverObject->onDisconnect (manager, receiverObject->onDisconnectCustomData);
-                        
-                        
-                        int sock_cli = socket(AF_INET, SOCK_STREAM, 0);
-                        struct sockaddr_in servaddr;
-                        memset(&servaddr, 0, sizeof(servaddr));
-                        servaddr.sin_family = AF_INET;
-                        servaddr.sin_port = htons(45678);
-                        servaddr.sin_addr.s_addr=inet_addr("127.0.0.1");
-                        if(connect(sock_cli, (struct sockaddr *)&servaddr, sizeof(servaddr))<0)
-                        {
-                            perror("connect");
-                            exit(1); 
-                        }
-                        char sendbuf[64];
-                        int count=100;
-                        for(count=100;count>0;count--)
-                        {
-                            sendbuf[0]='d';
-                            sendbuf[1]='o';
-                            sendbuf[2]='w';
-                            sendbuf[3]='n';
-                            sendbuf[4]='\0';
-                            send(sock_cli, sendbuf, strlen(sendbuf),0);
-                            memset(sendbuf, 0, sizeof(sendbuf));
-                        }
-                        close(sock_cli);
                     }
                 }
             }
@@ -1187,7 +1150,7 @@ static uint8_t ARNETWORKAL_WifiNetwork_IsTooLongWithoutReceive (ARNETWORKAL_Mana
         timeWithoutReception = ARSAL_Time_ComputeTimespecMsTimeDiff (&(receiverObject->lastDataReceivedDate), &currentDate);
 
         /* Check if the wifi network is stay too long without receive */
-        if (timeWithoutReception > ARNETWORKAL_WIFINETWORK_DISCONNECT_TIMEOUT_MS)
+        if (timeWithoutReception > 2*ARNETWORKAL_WIFINETWORK_DISCONNECT_TIMEOUT_MS)
         {
             isTooLongWithoutReceive = 1;
         }
